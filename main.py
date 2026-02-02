@@ -1,6 +1,5 @@
+from utils.subtitles import generate_srt
 from utils.tts import text_to_speech
-
-
 from pathlib import Path
 from utils.text_generator import generate_history_content
 from datetime import datetime
@@ -58,6 +57,11 @@ def save_output(sections: dict):
         audio_file = f"anlatim_{ts}.mp3"
     audio_path = text_to_speech(sections["ANLATIM"], audio_file)
     print("🎙️ Ses dosyası oluşturuldu:", audio_path)
+    # Altyazı üret
+    subtitle_file = f"anlatim_{ts}.srt"
+    subtitle_path = generate_srt(sections["ANLATIM"], subtitle_file, total_duration=40.0)
+    print("📝 Altyazı oluşturuldu:", subtitle_path)
+
 
 
 def main():
