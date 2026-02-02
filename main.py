@@ -1,3 +1,4 @@
+from utils.video_maker import make_video
 from utils.subtitles import generate_srt
 from utils.tts import text_to_speech
 from pathlib import Path
@@ -60,7 +61,16 @@ def save_output(sections: dict):
     # Altyazı üret
     subtitle_file = f"anlatim_{ts}.srt"
     subtitle_path = generate_srt(sections["ANLATIM"], subtitle_file, total_duration=40.0)
-    print("📝 Altyazı oluşturuldu:", subtitle_path)
+    print("📝 Altyazı oluşturuldu:", subtitle_path) 
+video_file = f"video_{ts}.mp4"
+    video_path = make_video(
+        background_video="background.mp4",
+        audio_file=audio_file,
+        subtitle_file=subtitle_file,
+        output_name=video_file
+    )
+    print("🎬 Video oluşturuldu:", video_path)
+
 
 
 
