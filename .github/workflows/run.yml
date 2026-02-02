@@ -1,13 +1,11 @@
 name: AI Video Automation
 
 on:
-  schedule:
-    - cron: "0 9 * * *"   # Her gün 09:00 UTC (TR 12:00)
   workflow_dispatch:
 
 jobs:
   run-bot:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Repo'yu çek
@@ -29,11 +27,11 @@ jobs:
       - name: Otomasyonu çalıştır
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: |
-          python main.py
+        run: python main.py
 
       - name: Videoları artifact olarak kaydet
         uses: actions/upload-artifact@v4
         with:
           name: generated-videos
           path: output/videos
+
