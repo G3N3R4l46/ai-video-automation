@@ -1,44 +1,39 @@
 from utils.video_maker import make_video
 from utils.subtitles import generate_srt
 from utils.tts import text_to_speech
-from pathlib import Path
 from utils.text_generator import generate_history_content
+from pathlib import Path
 from datetime import datetime
 
 BASE_DIR = Path(__file__).resolve().parent
 OUTPUT_DIR = BASE_DIR / "output"
-TEXT_DIR = OUTPUT_DIR / "texts"
 
-TEXT_DIR.mkdir(parents=True, exist_ok=True)
+TEXT_DIR = OUTPUT_DIR / "texts"
+AUDIO_DIR = OUTPUT_DIR / "audio"
+SUB_DIR = OUTPUT_DIR / "subtitles"
+VIDEO_DIR = OUTPUT_DIR / "videos"
+
+for d in [TEXT_DIR, AUDIO_DIR, SUB_DIR, VIDEO_DIR]:
+    d.mkdir(parents=True, exist_ok=True)
+
 
 def parse_sections(text: str):
-    sections = {
-        "ANLATIM": "",
-        "AÇIKLAMA": "",
-        "HASHTAG": ""
-    }
-
+    sections = {"ANLATIM": "", "AÇIKLAMA": "", "HASHTAG": ""}
     current = None
+
     for line in text.splitlines():
         line = line.strip()
         if line == "===ANLATIM===":
             current = "ANLATIM"
-            continue
-        if line == "===AÇIKLAMA===":
+        elif line == "===AÇIKLAMA===":
             current = "AÇIKLAMA"
-            continue
-        if line == "===HASHTAG===":
+        elif line == "===HASHTAG===":
             current = "HASHTAG"
-            continue
-
-        if current:
+        elif current:
             sections[current] += line + "\n"
 
-    # trim
-    for k in sections:
-        sections[k] = sections[k].strip()
+    return {k: v.strip() for k, v in sections.items()}
 
-    return sections
 
 def save_output(sections: dict):
     ts = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -51,40 +46,37 @@ def save_output(sections: dict):
     aciklama_path.write_text(sections["AÇIKLAMA"], encoding="utf-8")
     hashtag_path.write_text(sections["HASHTAG"], encoding="utf-8")
 
-    print("✔ Dosyalar kaydedildi:")
-    print(anlatim_path)
-    print(aciklama_path)
-    print(hashtag_path)
-        audio_file = f"anlatim_{ts}.mp3"
-    audio_path = text_to_speech(sections["ANLATIM"], audio_file)
-    print("🎙️ Ses dosyası oluşturuldu:", audio_path)
-    # Altyazı üret
-    subtitle_file = f"anlatim_{ts}.srt"
-    subtitle_path = generate_srt(sections["ANLATIM"], subtitle_file, total_duration=40.0)
-    print("📝 Altyazı oluşturuldu:", subtitle_path) 
-video_file = f"video_{ts}.mp4"
-    video_path = make_video(
-        background_video="background.mp4",
+    print("✔ Metinler kaydedildi")
+
+    audio_file = AUDIO_DIR / f"anlatim_{ts}.mp3"
+    text_to_speech(sections["ANLATIM"], audio_file)
+    print("🎙️ Ses oluşturuldu")
+
+    subtitle_file = SUB_DIR / f"anlatim_{ts}.srt"
+    generate_srt(sections["ANLATIM"], subtitle_file, total_duration=40.0)
+    print("📝 Altyazı oluşturuldu")
+
+    video_file = VIDEO_DIR / f"video_{ts}.mp4"
+    make_video(
+        background_video=BASE_DIR / "assets" / "background.mp4",
         audio_file=audio_file,
         subtitle_file=subtitle_file,
         output_name=video_file
     )
-    print("🎬 Video oluşturuldu:", video_path)
 
-
+    print("🎬 Video oluşturuldu:", video_file)
 
 
 def main():
     print("📜 Tarih içeriği üretiliyor...")
     raw_output = generate_history_content()
-
     sections = parse_sections(raw_output)
 
     if not all(sections.values()):
-        raise ValueError("Çıktı formatı bozuk. Prompt formatını kontrol et.")
+        raise ValueError("Prompt çıktısı eksik!")
 
     save_output(sections)
 
+
 if __name__ == "__main__":
     main()
-
